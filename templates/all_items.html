@@ -37,6 +37,7 @@
       {% endif %}
     </p>
   {% else %}
+    <div class="table-scroll">
     <table class="item-table">
       <thead><tr><th></th><th>Name</th><th>Qty</th><th>Description</th><th>Bin</th><th>Location</th></tr></thead>
       <tbody>
@@ -62,5 +63,6 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% endif %}
 {% endblock %}

@@ -20,6 +20,9 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Nothing should ever drag the page sideways; wide content scrolls internally. */
+html, body { max-width: 100%; overflow-x: hidden; }
+
 /* When installed as a home-screen app, the page renders edge to edge - including
    under the status bar (clock, battery, camera notch). These insets are 0 in a
    normal browser tab, so the desktop layout is unaffected. */
@@ -170,12 +173,27 @@ h2 { font-size: 1.15rem; margin-top: 2rem; }
 
 .bin-actions { display: flex; gap: 0.6rem; margin: 1rem 0; }
 
-.item-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+/* A wide table must scroll inside its own box. Without this the whole page
+   scrolls sideways and the header and search bar drift off screen. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 0.75rem;
+  max-width: 100%;
+}
+
+.item-table { width: 100%; border-collapse: collapse; }
 .item-table th, .item-table td {
   text-align: left;
   padding: 0.5rem 0.6rem;
   border-bottom: 1px solid var(--border);
   font-size: 0.92rem;
+}
+/* Keep the columns that carry meaning from wrapping into slivers. */
+.item-table th:nth-child(2), .item-table td:nth-child(2) { min-width: 7.5rem; }
+
+@media (max-width: 560px) {
+  .item-table th, .item-table td { padding: 0.45rem 0.45rem; font-size: 0.88rem; }
 }
 .row-actions { display: flex; gap: 0.6rem; }
 .row-actions a, .link-btn {

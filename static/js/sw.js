@@ -1,6 +1,6 @@
 // Service worker: cache the static shell, always prefer fresh data for pages.
 // Bump this when static assets change so clients pick them up.
-const CACHE = "home-inventory-v3";
+const CACHE = "home-inventory-v4";
 const SHELL = [
   "/static/css/style.css",
   "/static/js/photo.js",

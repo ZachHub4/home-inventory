@@ -27,6 +27,7 @@
   {% if not items %}
     <p class="empty">No items logged in this bin yet.</p>
   {% else %}
+    <div class="table-scroll">
     <table class="item-table">
       <thead><tr><th></th><th>Name</th><th>Qty</th><th>Description</th><th></th></tr></thead>
       <tbody>
@@ -56,6 +57,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% endif %}
 
   <h2>Add Item</h2>

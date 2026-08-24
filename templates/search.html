@@ -20,6 +20,7 @@
     {% endif %}
     {% if items %}
       <h2>Items</h2>
+      <div class="table-scroll">
       <table class="item-table">
         <thead><tr><th></th><th>Name</th><th>Qty</th><th>Description</th><th>Bin</th></tr></thead>
         <tbody>
@@ -44,6 +45,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
     {% endif %}
   {% endif %}
 {% endblock %}

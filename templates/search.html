@@ -37,10 +37,10 @@
                   <span class="no-photo">—</span>
                 {% endif %}
               </td>
-              <td>{{ item['name'] }}</td>
-              <td>{{ item['quantity'] }}</td>
-              <td>{{ item['description'] }}</td>
-              <td><a href="{{ url_for('bin_detail', code=item['bin_code']) }}">{{ item['bin_name'] }}</a></td>
+              <td class="cell-name">{{ item['name'] }}</td>
+              <td class="cell-qty" data-label="Qty">{{ item['quantity'] }}</td>
+              <td class="cell-desc">{{ item['description'] }}</td>
+              <td data-label="Bin"><a href="{{ url_for('bin_detail', code=item['bin_code']) }}">{{ item['bin_name'] }}</a></td>
             </tr>
           {% endfor %}
         </tbody>

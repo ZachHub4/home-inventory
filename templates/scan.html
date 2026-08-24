@@ -3,7 +3,8 @@
 {% block content %}
   <h1>Scan a Bin QR Code</h1>
   <p class="scan-hint">Point your camera at a bin's QR label.</p>
-  <div id="scan-status" class="scan-status">Requesting camera access&hellip;</div>
+  <div id="scan-status" class="scan-status">Loading&hellip;</div>
+  <p><button type="button" id="scan-start" class="btn scan-start">Start Camera</button></p>
   <video id="scan-video" class="scan-video" playsinline muted></video>
   <canvas id="scan-canvas" style="display:none"></canvas>
 

@@ -54,11 +54,11 @@
                 <span class="no-photo">&mdash;</span>
               {% endif %}
             </td>
-            <td><a href="{{ url_for('edit_item', item_id=item['id']) }}">{{ item['name'] }}</a></td>
-            <td>{{ item['quantity'] }}</td>
-            <td>{{ item['description'] }}</td>
-            <td><a href="{{ url_for('bin_detail', code=item['bin_code']) }}">{{ item['bin_name'] }}</a></td>
-            <td class="muted-cell">{{ item['location_name'] or '&mdash;'|safe }}</td>
+            <td class="cell-name"><a href="{{ url_for('edit_item', item_id=item['id']) }}">{{ item['name'] }}</a></td>
+            <td class="cell-qty" data-label="Qty">{{ item['quantity'] }}</td>
+            <td class="cell-desc">{{ item['description'] }}</td>
+            <td data-label="Bin"><a href="{{ url_for('bin_detail', code=item['bin_code']) }}">{{ item['bin_name'] }}</a></td>
+            <td class="muted-cell" data-label="Location">{{ item['location_name'] or '' }}</td>
           </tr>
         {% endfor %}
       </tbody>

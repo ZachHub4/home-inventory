@@ -192,8 +192,95 @@ h2 { font-size: 1.15rem; margin-top: 2rem; }
 /* Keep the columns that carry meaning from wrapping into slivers. */
 .item-table th:nth-child(2), .item-table td:nth-child(2) { min-width: 7.5rem; }
 
+/* On a phone a six-column table means side-swiping to read one row, so each
+   row becomes a card instead: photo on the left, name as the heading, and the
+   remaining fields labelled underneath. */
 @media (max-width: 560px) {
-  .item-table th, .item-table td { padding: 0.45rem 0.45rem; font-size: 0.88rem; }
+  .table-scroll { overflow-x: visible; }
+
+  .item-table,
+  .item-table tbody,
+  .item-table tr,
+  .item-table td { display: block; }
+
+  .item-table thead { display: none; }
+
+  .item-table tr {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0.6rem;
+    padding: 0.75rem 0.9rem 0.8rem 4.85rem;
+    min-height: 4.9rem;
+  }
+
+  .item-table td {
+    border: none;
+    padding: 0.08rem 0;
+    font-size: 0.9rem;
+  }
+  .item-table td:empty { display: none; }
+
+  /* Photo sits in the gutter the row padding reserves for it. */
+  .item-table .photo-cell {
+    position: absolute;
+    left: 0.9rem;
+    top: 0.85rem;
+    width: 3.4rem;
+    padding: 0;
+  }
+  .item-table .item-thumb { width: 3.4rem; height: 3.4rem; }
+
+  /* No photo: drop the dash and reclaim the gutter. */
+  .item-table tr:has(.no-photo) { padding-left: 0.9rem; min-height: 0; }
+  .item-table tr:has(.no-photo) .photo-cell { display: none; }
+
+  .item-table .cell-name {
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin-bottom: 0.15rem;
+  }
+  .item-table .cell-name a { color: var(--ink); text-decoration: none; }
+
+  .item-table .cell-desc { color: var(--muted); }
+
+  /* Quantity reads as a pill in the corner rather than a labelled row. */
+  .item-table .cell-qty {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.8rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .item-table .cell-qty::before {
+    content: "\00d7";
+    color: var(--muted);
+    font-weight: 400;
+    margin-right: 0.1rem;
+  }
+
+  /* Remaining fields get a small label so the card stays readable. */
+  .item-table td[data-label]:not(.cell-qty)::before {
+    content: attr(data-label) ": ";
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .item-table .row-actions {
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid var(--border);
+    gap: 1rem;
+  }
+
+  /* Leave room for the quantity pill. */
+  .item-table .cell-name { padding-right: 3.2rem; }
 }
 .row-actions { display: flex; gap: 0.6rem; }
 .row-actions a, .link-btn {
@@ -447,6 +534,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   border-radius: 8px;
 }
 
+.scan-start { font-size: 1rem; padding: 0.75rem 1.4rem; }
 .scan-video { width: 100%; max-width: 480px; border-radius: 10px; border: 1px solid var(--border); margin-top: 1rem; background: #000; }
 .scan-status { color: var(--muted); margin-top: 0.5rem; }
 .scan-hint { color: var(--muted); }

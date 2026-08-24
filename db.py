@@ -30,10 +30,15 @@ def init_db():
 
 def migrate_db(db):
     """Add columns introduced after a database was first created."""
-    columns = {row["name"] for row in db.execute("PRAGMA table_info(items)")}
-    if "photo" not in columns:
+    item_columns = {row["name"] for row in db.execute("PRAGMA table_info(items)")}
+    if "photo" not in item_columns:
         db.execute("ALTER TABLE items ADD COLUMN photo TEXT")
-        db.commit()
+
+    bin_columns = {row["name"] for row in db.execute("PRAGMA table_info(bins)")}
+    if "printed_at" not in bin_columns:
+        db.execute("ALTER TABLE bins ADD COLUMN printed_at TEXT")
+
+    db.commit()
 
 
 @click.command("init-db")

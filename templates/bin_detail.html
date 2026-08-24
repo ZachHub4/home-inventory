@@ -4,7 +4,12 @@
   <div class="bin-header">
     <div>
       <h1>{{ bin['name'] }}</h1>
-      <p class="bin-sub">{{ bin['location_name'] or 'No location' }} &middot; <code>{{ bin['code'] }}</code></p>
+      <p class="bin-sub">
+        {{ bin['location_name'] or 'No location' }} &middot; <code>{{ bin['code'] }}</code>
+        {% if not bin['printed_at'] %}
+          <span class="badge badge-new">Label not printed yet</span>
+        {% endif %}
+      </p>
       {% if bin['notes'] %}<p class="bin-notes">{{ bin['notes'] }}</p>{% endif %}
     </div>
     <img class="qr-thumb" src="{{ url_for('bin_qr', code=bin['code']) }}" alt="QR code for {{ bin['name'] }}">
@@ -12,6 +17,7 @@
 
   <div class="bin-actions">
     <a class="btn" href="{{ url_for('bin_label', code=bin['code']) }}">Print Label</a>
+    <a class="btn btn-quiet" href="{{ url_for('edit_bin', code=bin['code']) }}">Edit Bin</a>
     <form method="post" action="{{ url_for('delete_bin', code=bin['code']) }}" onsubmit="return confirm('Delete this bin and all its items?');">
       <button class="btn btn-danger" type="submit">Delete Bin</button>
     </form>
@@ -28,9 +34,11 @@
           <tr>
             <td class="photo-cell">
               {% if item['photo'] %}
-                <a href="{{ url_for('static', filename='uploads/' ~ item['photo']) }}" target="_blank">
+                <button type="button" class="photo-btn"
+                        data-photo="{{ url_for('static', filename='uploads/' ~ item['photo']) }}"
+                        data-photo-alt="{{ item['name'] }}">
                   <img class="item-thumb" src="{{ url_for('static', filename='uploads/' ~ item['photo'].rsplit('.', 1)[0] ~ '_thumb.jpg') }}" alt="{{ item['name'] }}">
-                </a>
+                </button>
               {% else %}
                 <span class="no-photo">—</span>
               {% endif %}
@@ -57,7 +65,7 @@
     <input type="text" name="description" placeholder="Description (optional)">
     <label class="photo-picker">
       📷 Photo
-      <input type="file" name="photo" accept="image/*" capture="environment">
+      <input type="file" name="photo" accept="image/*">
     </label>
     <button type="submit">Add</button>
   </form>

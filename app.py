@@ -1,5 +1,8 @@
 import io
+import json
 import secrets
+import zipfile
+from datetime import datetime
 from pathlib import Path
 
 import qrcode
@@ -131,19 +134,7 @@ def new_bin():
         if not name:
             abort(400, "Bin name is required")
 
-        location_id = None
-        if location_name:
-            row = conn.execute(
-                "SELECT id FROM locations WHERE name = ?", (location_name,)
-            ).fetchone()
-            if row:
-                location_id = row["id"]
-            else:
-                cur = conn.execute(
-                    "INSERT INTO locations (name) VALUES (?)", (location_name,)
-                )
-                location_id = cur.lastrowid
-
+        location_id = resolve_location(conn, location_name)
         code = generate_bin_code(conn)
         conn.execute(
             "INSERT INTO bins (code, name, location_id, notes) VALUES (?, ?, ?, ?)",
@@ -154,6 +145,89 @@ def new_bin():
 
     locations = conn.execute("SELECT name FROM locations ORDER BY name").fetchall()
     return render_template("new_bin.html", locations=locations)
+
+
+def resolve_location(conn, location_name):
+    """Return a location id for a name, creating the location if needed."""
+    location_name = (location_name or "").strip()
+    if not location_name:
+        return None
+    row = conn.execute(
+        "SELECT id FROM locations WHERE name = ?", (location_name,)
+    ).fetchone()
+    if row:
+        return row["id"]
+    return conn.execute(
+        "INSERT INTO locations (name) VALUES (?)", (location_name,)
+    ).lastrowid
+
+
+@app.route("/items")
+def all_items():
+    conn = db.get_db()
+    sort = request.args.get("sort", "name")
+    location = request.args.get("location", "").strip()
+
+    order = {
+        "name": "items.name COLLATE NOCASE",
+        "bin": "bins.name COLLATE NOCASE, items.name COLLATE NOCASE",
+        "location": "location_name IS NULL, location_name COLLATE NOCASE, items.name COLLATE NOCASE",
+        "quantity": "items.quantity DESC, items.name COLLATE NOCASE",
+        "newest": "items.created_at DESC",
+    }.get(sort, "items.name COLLATE NOCASE")
+
+    query = f"""SELECT items.*, bins.code AS bin_code, bins.name AS bin_name,
+                       locations.name AS location_name
+                FROM items
+                JOIN bins ON items.bin_id = bins.id
+                LEFT JOIN locations ON bins.location_id = locations.id
+                {{where}}
+                ORDER BY {order}"""
+
+    if location:
+        items = conn.execute(
+            query.format(where="WHERE locations.name = ?"), (location,)
+        ).fetchall()
+    else:
+        items = conn.execute(query.format(where="")).fetchall()
+
+    locations = conn.execute(
+        """SELECT DISTINCT locations.name FROM locations
+           JOIN bins ON bins.location_id = locations.id
+           ORDER BY locations.name"""
+    ).fetchall()
+    total = sum(row["quantity"] for row in items)
+
+    return render_template(
+        "all_items.html",
+        items=items,
+        locations=locations,
+        sort=sort,
+        location=location,
+        total=total,
+    )
+
+
+@app.route("/bin/<code>/edit", methods=["GET", "POST"])
+def edit_bin(code):
+    conn = db.get_db()
+    bin_row = get_bin_or_404(conn, code)
+
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        if not name:
+            abort(400, "Bin name is required")
+        location_id = resolve_location(conn, request.form.get("location"))
+        notes = request.form.get("notes", "").strip()
+        conn.execute(
+            "UPDATE bins SET name = ?, location_id = ?, notes = ? WHERE id = ?",
+            (name, location_id, notes, bin_row["id"]),
+        )
+        conn.commit()
+        return redirect(url_for("bin_detail", code=code))
+
+    locations = conn.execute("SELECT name FROM locations ORDER BY name").fetchall()
+    return render_template("edit_bin.html", bin=bin_row, locations=locations)
 
 
 @app.route("/bin/<code>")
@@ -210,6 +284,19 @@ def edit_item(item_id):
             quantity = 1
         description = request.form.get("description", "").strip()
 
+        # Moving the item to another bin changes where we redirect afterwards.
+        destination = item["bin_id"]
+        redirect_code = item["bin_code"]
+        requested = request.form.get("bin_id")
+        if requested:
+            target = conn.execute(
+                "SELECT id, code FROM bins WHERE id = ?", (requested,)
+            ).fetchone()
+            if target is None:
+                abort(400, "That bin does not exist")
+            destination = target["id"]
+            redirect_code = target["code"]
+
         photo = item["photo"]
         if request.form.get("remove_photo"):
             delete_photo(photo)
@@ -220,14 +307,20 @@ def edit_item(item_id):
             photo = new_photo
 
         conn.execute(
-            """UPDATE items SET name = ?, quantity = ?, description = ?, photo = ?
+            """UPDATE items SET name = ?, quantity = ?, description = ?, photo = ?,
+                                bin_id = ?
                WHERE id = ?""",
-            (name, quantity, description, photo, item_id),
+            (name, quantity, description, photo, destination, item_id),
         )
         conn.commit()
-        return redirect(url_for("bin_detail", code=item["bin_code"]))
+        return redirect(url_for("bin_detail", code=redirect_code))
 
-    return render_template("edit_item.html", item=item)
+    bins = conn.execute(
+        """SELECT bins.id, bins.code, bins.name, locations.name AS location_name
+           FROM bins LEFT JOIN locations ON bins.location_id = locations.id
+           ORDER BY bins.name COLLATE NOCASE"""
+    ).fetchall()
+    return render_template("edit_item.html", item=item, bins=bins)
 
 
 @app.route("/items/<int:item_id>/delete", methods=["POST"])
@@ -279,6 +372,61 @@ def bin_label(code):
     return render_template("label.html", bin=bin_row)
 
 
+@app.route("/labels")
+def labels():
+    conn = db.get_db()
+    bins = conn.execute(
+        """SELECT bins.*, locations.name AS location_name
+           FROM bins LEFT JOIN locations ON bins.location_id = locations.id
+           ORDER BY bins.printed_at IS NOT NULL, location_name IS NULL,
+                    location_name COLLATE NOCASE, bins.name COLLATE NOCASE"""
+    ).fetchall()
+    unprinted = sum(1 for b in bins if not b["printed_at"])
+    return render_template("labels.html", bins=bins, unprinted=unprinted)
+
+
+@app.route("/labels/print", methods=["POST"])
+def print_labels():
+    codes = request.form.getlist("codes")
+    if not codes:
+        return redirect(url_for("labels"))
+
+    conn = db.get_db()
+    placeholders = ",".join("?" for _ in codes)
+    bins = conn.execute(
+        f"""SELECT bins.*, locations.name AS location_name
+            FROM bins LEFT JOIN locations ON bins.location_id = locations.id
+            WHERE bins.code IN ({placeholders})
+            ORDER BY location_name IS NULL, location_name COLLATE NOCASE,
+                     bins.name COLLATE NOCASE""",
+        codes,
+    ).fetchall()
+    if not bins:
+        return redirect(url_for("labels"))
+
+    return render_template("label_sheet.html", bins=bins)
+
+
+@app.route("/labels/mark", methods=["POST"])
+def mark_labels():
+    """Record that labels were printed - or clear that, to reprint them."""
+    codes = request.form.getlist("codes")
+    printed = request.form.get("printed") != "0"
+    if codes:
+        conn = db.get_db()
+        placeholders = ",".join("?" for _ in codes)
+        stamp = datetime.now().isoformat(timespec="seconds") if printed else None
+        conn.execute(
+            f"UPDATE bins SET printed_at = ? WHERE code IN ({placeholders})",
+            [stamp, *codes],
+        )
+        conn.commit()
+
+    if request.form.get("respond") == "json":
+        return {"updated": len(codes), "printed": printed}
+    return redirect(request.form.get("next") or url_for("labels"))
+
+
 @app.route("/scan")
 def scan():
     conn = db.get_db()
@@ -301,6 +449,172 @@ def go_to_bin():
     if row is None:
         return render_template("scan_notfound.html", code=raw), 404
     return redirect(url_for("bin_detail", code=row["code"]))
+
+
+BACKUP_VERSION = 1
+
+
+@app.route("/backup")
+def backup_page():
+    conn = db.get_db()
+    counts = {
+        "bins": conn.execute("SELECT COUNT(*) AS n FROM bins").fetchone()["n"],
+        "items": conn.execute("SELECT COUNT(*) AS n FROM items").fetchone()["n"],
+        "photos": conn.execute(
+            "SELECT COUNT(*) AS n FROM items WHERE photo IS NOT NULL"
+        ).fetchone()["n"],
+    }
+    return render_template("backup.html", counts=counts)
+
+
+@app.route("/backup/export")
+def export_backup():
+    """Download everything - database rows plus photo files - as one zip."""
+    conn = db.get_db()
+    payload = {
+        "version": BACKUP_VERSION,
+        "exported_at": datetime.now().isoformat(timespec="seconds"),
+        "locations": [dict(r) for r in conn.execute("SELECT * FROM locations")],
+        "bins": [dict(r) for r in conn.execute("SELECT * FROM bins")],
+        "items": [dict(r) for r in conn.execute("SELECT * FROM items")],
+    }
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("inventory.json", json.dumps(payload, indent=2))
+        for row in payload["items"]:
+            if not row.get("photo"):
+                continue
+            stem = Path(row["photo"]).stem
+            for filename in (f"{stem}.jpg", f"{stem}_thumb.jpg"):
+                path = UPLOAD_DIR / filename
+                if path.exists():
+                    zf.write(path, f"photos/{filename}")
+
+    buf.seek(0)
+    stamp = datetime.now().strftime("%Y-%m-%d")
+    return send_file(
+        buf,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"home-inventory-backup-{stamp}.zip",
+    )
+
+
+@app.route("/backup/import", methods=["POST"])
+def import_backup():
+    """Replace all current data with the contents of a backup zip."""
+    if request.form.get("confirm") != "REPLACE":
+        return render_template(
+            "backup_result.html",
+            ok=False,
+            message="Type REPLACE in the confirmation box to restore a backup.",
+        )
+
+    upload = request.files.get("backup")
+    if not upload or not upload.filename:
+        return render_template(
+            "backup_result.html", ok=False, message="No backup file was selected."
+        )
+
+    try:
+        archive = zipfile.ZipFile(upload.stream)
+        payload = json.loads(archive.read("inventory.json"))
+    except (zipfile.BadZipFile, KeyError, json.JSONDecodeError, OSError):
+        return render_template(
+            "backup_result.html",
+            ok=False,
+            message="That file isn't a valid Home Inventory backup.",
+        )
+
+    if payload.get("version") != BACKUP_VERSION:
+        return render_template(
+            "backup_result.html",
+            ok=False,
+            message=f"Backup version {payload.get('version')!r} isn't supported by this app.",
+        )
+    for table in ("locations", "bins", "items"):
+        if not isinstance(payload.get(table), list):
+            return render_template(
+                "backup_result.html",
+                ok=False,
+                message=f"The backup is missing its {table} data.",
+            )
+
+    conn = db.get_db()
+    conn.execute("DELETE FROM items")
+    conn.execute("DELETE FROM bins")
+    conn.execute("DELETE FROM locations")
+
+    for row in payload["locations"]:
+        conn.execute(
+            "INSERT INTO locations (id, name) VALUES (?, ?)", (row["id"], row["name"])
+        )
+    for row in payload["bins"]:
+        conn.execute(
+            """INSERT INTO bins (id, code, name, location_id, notes, printed_at, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                row["id"],
+                row["code"],
+                row["name"],
+                row.get("location_id"),
+                row.get("notes"),
+                row.get("printed_at"),
+                row.get("created_at"),
+            ),
+        )
+    for row in payload["items"]:
+        conn.execute(
+            """INSERT INTO items (id, bin_id, name, quantity, description, photo, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                row["id"],
+                row["bin_id"],
+                row["name"],
+                row.get("quantity", 1),
+                row.get("description"),
+                row.get("photo"),
+                row.get("created_at"),
+            ),
+        )
+    conn.commit()
+
+    # Restore photos, ignoring any path components in the archive so a crafted
+    # zip cannot write outside the uploads folder.
+    restored = 0
+    for member in archive.namelist():
+        if not member.startswith("photos/") or member.endswith("/"):
+            continue
+        safe = Path(member).name
+        if not safe or safe.startswith("."):
+            continue
+        with archive.open(member) as src:
+            (UPLOAD_DIR / safe).write_bytes(src.read())
+        restored += 1
+
+    # Drop photo files belonging to the data we just replaced, so the uploads
+    # folder matches the restored inventory instead of accumulating orphans.
+    keep = set()
+    for row in payload["items"]:
+        if row.get("photo"):
+            stem = Path(row["photo"]).stem
+            keep.update({f"{stem}.jpg", f"{stem}_thumb.jpg"})
+    removed = 0
+    for path in UPLOAD_DIR.glob("*.jpg"):
+        if path.name not in keep:
+            path.unlink()
+            removed += 1
+
+    return render_template(
+        "backup_result.html",
+        ok=True,
+        message=(
+            f"Restored {len(payload['bins'])} bins, {len(payload['items'])} items, "
+            f"and {restored} photo files. Removed {removed} photo files that "
+            f"belonged to the replaced data."
+        ),
+    )
 
 
 @app.route("/manifest.webmanifest")

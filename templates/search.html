@@ -27,9 +27,11 @@
             <tr>
               <td class="photo-cell">
                 {% if item['photo'] %}
-                  <a href="{{ url_for('static', filename='uploads/' ~ item['photo']) }}" target="_blank">
+                  <button type="button" class="photo-btn"
+                          data-photo="{{ url_for('static', filename='uploads/' ~ item['photo']) }}"
+                          data-photo-alt="{{ item['name'] }}">
                     <img class="item-thumb" src="{{ url_for('static', filename='uploads/' ~ item['photo'].rsplit('.', 1)[0] ~ '_thumb.jpg') }}" alt="{{ item['name'] }}">
-                  </a>
+                  </button>
                 {% else %}
                   <span class="no-photo">—</span>
                 {% endif %}

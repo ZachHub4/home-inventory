@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ bin['name'] }} - Home Inventory{% endblock %}
+{% block content %}
+  <h1>Edit Bin</h1>
+  <p class="bin-sub"><code>{{ bin['code'] }}</code> &middot; the code and its QR label stay the same</p>
+  <form class="form" method="post">
+    <label>Bin name
+      <input type="text" name="name" value="{{ bin['name'] }}" required autofocus>
+    </label>
+    <label>Location
+      <input type="text" name="location" value="{{ bin['location_name'] or '' }}" list="location-list">
+      <datalist id="location-list">
+        {% for loc in locations %}
+          <option value="{{ loc['name'] }}">
+        {% endfor %}
+      </datalist>
+    </label>
+    <label>Notes
+      <textarea name="notes">{{ bin['notes'] or '' }}</textarea>
+    </label>
+    <div class="bin-actions">
+      <button type="submit">Save Changes</button>
+      <a class="btn btn-quiet" href="{{ url_for('bin_detail', code=bin['code']) }}">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

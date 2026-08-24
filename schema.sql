@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS bins (
     name TEXT NOT NULL,
     location_id INTEGER REFERENCES locations(id) ON DELETE SET NULL,
     notes TEXT,
+    -- NULL means no physical label has been printed for this bin yet.
+    printed_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

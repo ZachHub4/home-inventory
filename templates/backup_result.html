@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Restored' if ok else 'Restore failed' }} - Home Inventory{% endblock %}
+{% block content %}
+  <h1>{{ 'Backup restored' if ok else 'Restore failed' }}</h1>
+  <p class="{{ 'restore-ok' if ok else 'scan-error' }}">{{ message }}</p>
+  <div class="bin-actions">
+    <a class="btn" href="{{ url_for('index') }}">Go to Bins</a>
+    <a class="btn btn-quiet" href="{{ url_for('backup_page') }}">Back to Backup</a>
+  </div>
+{% endblock %}

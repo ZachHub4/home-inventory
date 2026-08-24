@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Backup - Home Inventory{% endblock %}
+{% block content %}
+  <h1>Backup &amp; Restore</h1>
+  <p class="bin-sub">
+    Your inventory lives only on this computer. A backup is the only way to
+    recover it if this machine is lost or the drive fails.
+  </p>
+
+  <h2>Export</h2>
+  <p>Downloads one zip containing {{ counts['bins'] }} bin{{ '' if counts['bins'] == 1 else 's' }},
+     {{ counts['items'] }} item{{ '' if counts['items'] == 1 else 's' }},
+     and {{ counts['photos'] }} photo{{ '' if counts['photos'] == 1 else 's' }}.
+     Keep it somewhere other than this computer.</p>
+  <a class="btn" href="{{ url_for('export_backup') }}">Download Backup</a>
+
+  <h2>Restore</h2>
+  <div class="danger-box">
+    <p><strong>Restoring replaces everything.</strong> Every bin, item, and photo
+       currently in the app is deleted and replaced with the backup's contents.
+       This cannot be undone.</p>
+    <p>Export a fresh backup first if there's anything here you want to keep.</p>
+  </div>
+  <form class="form" method="post" action="{{ url_for('import_backup') }}"
+        enctype="multipart/form-data"
+        onsubmit="return confirm('This permanently replaces all current bins, items, and photos. Continue?');">
+    <label>Backup file
+      <input type="file" name="backup" accept=".zip,application/zip" required>
+    </label>
+    <label>Type <code>REPLACE</code> to confirm
+      <input type="text" name="confirm" placeholder="REPLACE" required
+             autocomplete="off" spellcheck="false">
+    </label>
+    <button class="btn-danger" type="submit">Replace All Data</button>
+  </form>
+{% endblock %}

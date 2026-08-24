@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Print Labels - Home Inventory{% endblock %}
+{% block content %}
+  <h1>Print Labels</h1>
+  {% if unprinted %}
+    <p class="bin-sub">{{ unprinted }} bin{{ '' if unprinted == 1 else 's' }} still need a printed label.</p>
+  {% elif bins %}
+    <p class="bin-sub">Every bin has a printed label.</p>
+  {% endif %}
+
+  {% if not bins %}
+    <p class="empty">No bins yet. <a href="{{ url_for('new_bin') }}">Create one</a> to print a label.</p>
+  {% else %}
+    <form method="post" action="{{ url_for('print_labels') }}" target="_blank">
+      <div class="select-actions">
+        <button type="button" class="btn btn-quiet" data-select="all">Select all</button>
+        <button type="button" class="btn btn-quiet" data-select="unprinted">Select unprinted</button>
+        <button type="button" class="btn btn-quiet" data-select="none">Clear</button>
+        <span class="select-count" id="select-count"></span>
+      </div>
+
+      <ul class="label-list">
+        {% for bin in bins %}
+          <li class="label-row {{ 'is-unprinted' if not bin['printed_at'] }}">
+            <label class="label-pick">
+              <input type="checkbox" name="codes" value="{{ bin['code'] }}"
+                     data-printed="{{ 1 if bin['printed_at'] else 0 }}">
+              <img class="label-mini" src="{{ url_for('bin_qr', code=bin['code']) }}" alt="">
+              <span class="label-meta">
+                <span class="label-name">{{ bin['name'] }}</span>
+                <span class="label-sub">{{ bin['location_name'] or 'No location' }} &middot; <code>{{ bin['code'] }}</code></span>
+                {% if bin['printed_at'] %}
+                  <span class="badge badge-quiet">Printed {{ bin['printed_at'][:10] }}</span>
+                {% else %}
+                  <span class="badge badge-new">Not printed yet</span>
+                {% endif %}
+              </span>
+            </label>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="bin-actions">
+        <button type="submit" id="print-btn">Print Selected</button>
+      </div>
+    </form>
+
+    <form method="post" action="{{ url_for('mark_labels') }}" id="reset-form">
+      <input type="hidden" name="printed" value="0">
+      <input type="hidden" name="next" value="{{ url_for('labels') }}">
+      <div id="reset-codes"></div>
+      <button type="submit" class="btn btn-quiet" id="reset-btn">Mark selected as not printed</button>
+    </form>
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='js/labels.js') }}"></script>
+{% endblock %}

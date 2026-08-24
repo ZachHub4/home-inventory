@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Labels ({{ bins|length }})</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="sheet-body">
+  <div class="sheet-toolbar no-print">
+    <div>
+      <strong>{{ bins|length }} label{{ '' if bins|length == 1 else 's' }}</strong>
+      <span class="scan-hint">&mdash; printing marks these as printed.</span>
+    </div>
+    <div class="sheet-toolbar-actions">
+      <button onclick="window.print()">Print</button>
+      <button class="btn btn-quiet" onclick="window.close()">Close</button>
+    </div>
+  </div>
+
+  <div class="sheet">
+    {% for bin in bins %}
+      <div class="sheet-label">
+        <img src="{{ url_for('bin_qr', code=bin['code']) }}" alt="QR code for {{ bin['name'] }}">
+        <div class="sheet-name">{{ bin['name'] }}</div>
+        <div class="sheet-loc">{{ bin['location_name'] or '' }}</div>
+        <div class="sheet-code">{{ bin['code'] }}</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="{{ url_for('mark_labels') }}" id="mark-form">
+    {% for bin in bins %}
+      <input type="hidden" name="codes" value="{{ bin['code'] }}">
+    {% endfor %}
+    <input type="hidden" name="respond" value="json">
+  </form>
+
+  <script>
+    // Mark these bins as printed once the print dialog has been through.
+    let marked = false;
+    function markPrinted() {
+      if (marked) return;
+      marked = true;
+      const form = document.getElementById("mark-form");
+      navigator.sendBeacon(form.action, new FormData(form));
+    }
+    window.addEventListener("afterprint", markPrinted);
+  </script>
+</body>
+</html>

@@ -20,8 +20,10 @@
     <a class="brand" href="{{ url_for('index') }}">📦 Home Inventory</a>
     <nav>
       <a href="{{ url_for('index') }}">Bins</a>
+      <a href="{{ url_for('all_items') }}">Items</a>
       <a href="{{ url_for('new_bin') }}">New Bin</a>
-      <a href="{{ url_for('scan') }}">Scan QR</a>
+      <a href="{{ url_for('scan') }}">Scan</a>
+      <a href="{{ url_for('labels') }}">Labels</a>
     </nav>
   </header>
   <form class="search-bar" action="{{ url_for('search') }}" method="get">
@@ -32,6 +34,7 @@
     {% block content %}{% endblock %}
   </main>
   <script src="{{ url_for('static', filename='js/photo.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lightbox.js') }}"></script>
   <script>
     // Service workers need a secure context: HTTPS, or localhost during development.
     if ("serviceWorker" in navigator && window.isSecureContext) {

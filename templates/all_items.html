@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}All Items - Home Inventory{% endblock %}
+{% block content %}
+  <h1>All Items</h1>
+  <p class="bin-sub">
+    {{ items|length }} entr{{ 'y' if items|length == 1 else 'ies' }} &middot;
+    {{ total }} item{{ '' if total == 1 else 's' }} counted
+  </p>
+
+  <form class="filter-bar" method="get">
+    <label class="filter-field">Sort by
+      <select name="sort" onchange="this.form.submit()">
+        <option value="name" {{ 'selected' if sort == 'name' }}>Name</option>
+        <option value="bin" {{ 'selected' if sort == 'bin' }}>Bin</option>
+        <option value="location" {{ 'selected' if sort == 'location' }}>Location</option>
+        <option value="quantity" {{ 'selected' if sort == 'quantity' }}>Quantity</option>
+        <option value="newest" {{ 'selected' if sort == 'newest' }}>Recently added</option>
+      </select>
+    </label>
+    <label class="filter-field">Location
+      <select name="location" onchange="this.form.submit()">
+        <option value="">All locations</option>
+        {% for loc in locations %}
+          <option value="{{ loc['name'] }}" {{ 'selected' if location == loc['name'] }}>{{ loc['name'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <noscript><button type="submit">Apply</button></noscript>
+  </form>
+
+  {% if not items %}
+    <p class="empty">
+      {% if location %}
+        Nothing stored in {{ location }} yet.
+      {% else %}
+        No items logged yet. Open a bin to start adding things.
+      {% endif %}
+    </p>
+  {% else %}
+    <table class="item-table">
+      <thead><tr><th></th><th>Name</th><th>Qty</th><th>Description</th><th>Bin</th><th>Location</th></tr></thead>
+      <tbody>
+        {% for item in items %}
+          <tr>
+            <td class="photo-cell">
+              {% if item['photo'] %}
+                <button type="button" class="photo-btn"
+                        data-photo="{{ url_for('static', filename='uploads/' ~ item['photo']) }}"
+                        data-photo-alt="{{ item['name'] }}">
+                  <img class="item-thumb" src="{{ url_for('static', filename='uploads/' ~ item['photo'].rsplit('.', 1)[0] ~ '_thumb.jpg') }}" alt="{{ item['name'] }}">
+                </button>
+              {% else %}
+                <span class="no-photo">&mdash;</span>
+              {% endif %}
+            </td>
+            <td><a href="{{ url_for('edit_item', item_id=item['id']) }}">{{ item['name'] }}</a></td>
+            <td>{{ item['quantity'] }}</td>
+            <td>{{ item['description'] }}</td>
+            <td><a href="{{ url_for('bin_detail', code=item['bin_code']) }}">{{ item['bin_name'] }}</a></td>
+            <td class="muted-cell">{{ item['location_name'] or '&mdash;'|safe }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

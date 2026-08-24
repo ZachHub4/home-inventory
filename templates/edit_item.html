@@ -12,23 +12,36 @@
     <label>Description
       <textarea name="description">{{ item['description'] or '' }}</textarea>
     </label>
+    <label>Bin
+      <select name="bin_id">
+        {% for b in bins %}
+          <option value="{{ b['id'] }}" {{ 'selected' if b['id'] == item['bin_id'] }}>
+            {{ b['name'] }}{% if b['location_name'] %} ({{ b['location_name'] }}){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
 
     {% if item['photo'] %}
       <div class="current-photo">
         <span class="photo-label">Current photo</span>
-        <a href="{{ url_for('static', filename='uploads/' ~ item['photo']) }}" target="_blank">
+        <button type="button" class="photo-btn"
+                data-photo="{{ url_for('static', filename='uploads/' ~ item['photo']) }}"
+                data-photo-alt="{{ item['name'] }}">
           <img src="{{ url_for('static', filename='uploads/' ~ item['photo'].rsplit('.', 1)[0] ~ '_thumb.jpg') }}" alt="{{ item['name'] }}">
-        </a>
+        </button>
         <label class="checkbox-row">
           <input type="checkbox" name="remove_photo" value="1"> Remove this photo
         </label>
       </div>
       <label>Replace photo
-        <input type="file" name="photo" accept="image/*" capture="environment">
+        <span class="field-hint">Camera or photo library</span>
+        <input type="file" name="photo" accept="image/*">
       </label>
     {% else %}
       <label>Add photo
-        <input type="file" name="photo" accept="image/*" capture="environment">
+        <span class="field-hint">Camera or photo library</span>
+        <input type="file" name="photo" accept="image/*">
       </label>
     {% endif %}
 

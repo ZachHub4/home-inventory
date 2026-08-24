@@ -1,0 +1,18 @@
+# Virtual environment
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Your actual inventory data - never commit this
+inventory.db
+inventory.db-journal
+
+# Uploaded item photos - never commit these
+static/uploads/*
+!static/uploads/.gitkeep
+
+# OS noise
+.DS_Store
+Thumbs.db

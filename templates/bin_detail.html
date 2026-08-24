@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ bin['name'] }} - Home Inventory{% endblock %}
+{% block content %}
+  <div class="bin-header">
+    <div>
+      <h1>{{ bin['name'] }}</h1>
+      <p class="bin-sub">{{ bin['location_name'] or 'No location' }} &middot; <code>{{ bin['code'] }}</code></p>
+      {% if bin['notes'] %}<p class="bin-notes">{{ bin['notes'] }}</p>{% endif %}
+    </div>
+    <img class="qr-thumb" src="{{ url_for('bin_qr', code=bin['code']) }}" alt="QR code for {{ bin['name'] }}">
+  </div>
+
+  <div class="bin-actions">
+    <a class="btn" href="{{ url_for('bin_label', code=bin['code']) }}">Print Label</a>
+    <form method="post" action="{{ url_for('delete_bin', code=bin['code']) }}" onsubmit="return confirm('Delete this bin and all its items?');">
+      <button class="btn btn-danger" type="submit">Delete Bin</button>
+    </form>
+  </div>
+
+  <h2>Items</h2>
+  {% if not items %}
+    <p class="empty">No items logged in this bin yet.</p>
+  {% else %}
+    <table class="item-table">
+      <thead><tr><th></th><th>Name</th><th>Qty</th><th>Description</th><th></th></tr></thead>
+      <tbody>
+        {% for item in items %}
+          <tr>
+            <td class="photo-cell">
+              {% if item['photo'] %}
+                <a href="{{ url_for('static', filename='uploads/' ~ item['photo']) }}" target="_blank">
+                  <img class="item-thumb" src="{{ url_for('static', filename='uploads/' ~ item['photo'].rsplit('.', 1)[0] ~ '_thumb.jpg') }}" alt="{{ item['name'] }}">
+                </a>
+              {% else %}
+                <span class="no-photo">—</span>
+              {% endif %}
+            </td>
+            <td>{{ item['name'] }}</td>
+            <td>{{ item['quantity'] }}</td>
+            <td>{{ item['description'] }}</td>
+            <td class="row-actions">
+              <a href="{{ url_for('edit_item', item_id=item['id']) }}">Edit</a>
+              <form method="post" action="{{ url_for('delete_item', item_id=item['id']) }}" onsubmit="return confirm('Delete this item?');">
+                <button class="link-btn" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <h2>Add Item</h2>
+  <form class="form form-inline" method="post" action="{{ url_for('add_item', code=bin['code']) }}" enctype="multipart/form-data">
+    <input type="text" name="name" placeholder="Item name" required>
+    <input type="number" name="quantity" placeholder="Qty" value="1" min="1" style="width:5em">
+    <input type="text" name="description" placeholder="Description (optional)">
+    <label class="photo-picker">
+      📷 Photo
+      <input type="file" name="photo" accept="image/*" capture="environment">
+    </label>
+    <button type="submit">Add</button>
+  </form>
+{% endblock %}

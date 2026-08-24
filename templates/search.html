@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Search - Home Inventory{% endblock %}
+{% block content %}
+  <h1>Search results for "{{ q }}"</h1>
+  {% if not q %}
+    <p class="empty">Type something in the search bar above.</p>
+  {% elif not items and not bins %}
+    <p class="empty">No matches found.</p>
+  {% else %}
+    {% if bins %}
+      <h2>Bins</h2>
+      <div class="bin-grid">
+        {% for bin in bins %}
+          <a class="bin-card" href="{{ url_for('bin_detail', code=bin['code']) }}">
+            <div class="bin-card-name">{{ bin['name'] }}</div>
+            <div class="bin-card-code">{{ bin['code'] }}</div>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if items %}
+      <h2>Items</h2>
+      <table class="item-table">
+        <thead><tr><th></th><th>Name</th><th>Qty</th><th>Description</th><th>Bin</th></tr></thead>
+        <tbody>
+          {% for item in items %}
+            <tr>
+              <td class="photo-cell">
+                {% if item['photo'] %}
+                  <a href="{{ url_for('static', filename='uploads/' ~ item['photo']) }}" target="_blank">
+                    <img class="item-thumb" src="{{ url_for('static', filename='uploads/' ~ item['photo'].rsplit('.', 1)[0] ~ '_thumb.jpg') }}" alt="{{ item['name'] }}">
+                  </a>
+                {% else %}
+                  <span class="no-photo">—</span>
+                {% endif %}
+              </td>
+              <td>{{ item['name'] }}</td>
+              <td>{{ item['quantity'] }}</td>
+              <td>{{ item['description'] }}</td>
+              <td><a href="{{ url_for('bin_detail', code=item['bin_code']) }}">{{ item['bin_name'] }}</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  {% endif %}
+{% endblock %}

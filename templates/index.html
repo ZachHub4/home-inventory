@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Bins - Home Inventory{% endblock %}
+{% block content %}
+  <h1>All Bins</h1>
+  {% if not bins %}
+    <p class="empty">No bins yet. <a href="{{ url_for('new_bin') }}">Create your first bin</a>.</p>
+  {% else %}
+    <div class="bin-grid">
+      {% for bin in bins %}
+        <a class="bin-card" href="{{ url_for('bin_detail', code=bin['code']) }}">
+          <div class="bin-card-name">{{ bin['name'] }}</div>
+          <div class="bin-card-meta">{{ bin['location_name'] or 'No location' }} &middot; {{ bin['item_count'] }} item{{ '' if bin['item_count'] == 1 else 's' }}</div>
+          <div class="bin-card-code">{{ bin['code'] }}</div>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

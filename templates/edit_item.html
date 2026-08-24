@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Edit Item - Home Inventory{% endblock %}
+{% block content %}
+  <h1>Edit Item</h1>
+  <form class="form" method="post" enctype="multipart/form-data">
+    <label>Name
+      <input type="text" name="name" value="{{ item['name'] }}" required autofocus>
+    </label>
+    <label>Quantity
+      <input type="number" name="quantity" value="{{ item['quantity'] }}" min="1">
+    </label>
+    <label>Description
+      <textarea name="description">{{ item['description'] or '' }}</textarea>
+    </label>
+
+    {% if item['photo'] %}
+      <div class="current-photo">
+        <span class="photo-label">Current photo</span>
+        <a href="{{ url_for('static', filename='uploads/' ~ item['photo']) }}" target="_blank">
+          <img src="{{ url_for('static', filename='uploads/' ~ item['photo'].rsplit('.', 1)[0] ~ '_thumb.jpg') }}" alt="{{ item['name'] }}">
+        </a>
+        <label class="checkbox-row">
+          <input type="checkbox" name="remove_photo" value="1"> Remove this photo
+        </label>
+      </div>
+      <label>Replace photo
+        <input type="file" name="photo" accept="image/*" capture="environment">
+      </label>
+    {% else %}
+      <label>Add photo
+        <input type="file" name="photo" accept="image/*" capture="environment">
+      </label>
+    {% endif %}
+
+    <button type="submit">Save</button>
+    <a class="btn" href="{{ url_for('bin_detail', code=item['bin_code']) }}">Cancel</a>
+  </form>
+{% endblock %}

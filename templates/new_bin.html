@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}New Bin - Home Inventory{% endblock %}
+{% block content %}
+  <h1>New Bin</h1>
+  <form class="form" method="post">
+    <label>Bin name
+      <input type="text" name="name" placeholder="e.g. Christmas Decorations" required autofocus>
+    </label>
+    <label>Location
+      <input type="text" name="location" placeholder="e.g. Garage Shelf 2" list="location-list">
+      <datalist id="location-list">
+        {% for loc in locations %}
+          <option value="{{ loc['name'] }}">
+        {% endfor %}
+      </datalist>
+    </label>
+    <label>Notes
+      <textarea name="notes" placeholder="Optional notes about this bin"></textarea>
+    </label>
+    <button type="submit">Create Bin &amp; Get QR Label</button>
+  </form>
+{% endblock %}

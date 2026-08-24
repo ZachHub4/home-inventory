@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Home Inventory{% endblock %}</title>
+
+  <link rel="manifest" href="{{ url_for('manifest') }}">
+  <meta name="theme-color" content="#b5651d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Inventory">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-180.png') }}">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">📦 Home Inventory</a>
+    <nav>
+      <a href="{{ url_for('index') }}">Bins</a>
+      <a href="{{ url_for('new_bin') }}">New Bin</a>
+      <a href="{{ url_for('scan') }}">Scan QR</a>
+    </nav>
+  </header>
+  <form class="search-bar" action="{{ url_for('search') }}" method="get">
+    <input type="text" name="q" placeholder="Search items or bins..." value="{{ request.args.get('q', '') }}">
+    <button type="submit">Search</button>
+  </form>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='js/photo.js') }}"></script>
+  <script>
+    // Service workers need a secure context: HTTPS, or localhost during development.
+    if ("serviceWorker" in navigator && window.isSecureContext) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>

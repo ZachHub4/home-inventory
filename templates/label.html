@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Label - {{ bin['name'] }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="label-body">
+  <div class="label-actions no-print">
+    <a href="{{ url_for('bin_detail', code=bin['code']) }}">&larr; Back to bin</a>
+    <button onclick="window.print()">Print Label</button>
+  </div>
+  <div class="label">
+    <img src="{{ url_for('bin_qr', code=bin['code']) }}" alt="QR code">
+    <div class="label-name">{{ bin['name'] }}</div>
+    <div class="label-code">{{ bin['code'] }}</div>
+  </div>
+</body>
+</html>

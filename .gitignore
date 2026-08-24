@@ -13,6 +13,9 @@ inventory.db-journal
 static/uploads/*
 !static/uploads/.gitkeep
 
+# TLS certificates and keys - the CA key must never leave this machine
+certs/
+
 # OS noise
 .DS_Store
 Thumbs.db

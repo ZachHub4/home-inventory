@@ -321,4 +321,18 @@ def service_worker():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Serve over HTTPS when certificates exist. Browsers only expose the camera
+    # (and service workers) in a secure context, so QR scanning from a phone
+    # requires this. Falls back to plain HTTP if the certs are missing.
+    cert = Path(__file__).parent / "certs" / "server-cert.pem"
+    key = Path(__file__).parent / "certs" / "server-key.pem"
+
+    if cert.exists() and key.exists():
+        print("Serving over HTTPS: https://localhost:5000")
+        app.run(
+            host="0.0.0.0", port=5000, debug=True, ssl_context=(str(cert), str(key))
+        )
+    else:
+        print("No certificates found - serving over plain HTTP (camera will not work).")
+        print("Run scripts/make-certs.sh <your-lan-ip> to enable HTTPS.")
+        app.run(host="0.0.0.0", port=5000, debug=True)

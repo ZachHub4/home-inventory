@@ -47,11 +47,53 @@ The app listens on `0.0.0.0`, so any device on the same WiFi can reach it:
 
 You may need to allow Python through your firewall for other devices to connect.
 
-### Note on offline support
+## HTTPS (required for QR scanning)
 
-The service worker only registers over HTTPS (or on `localhost`). Over plain HTTP
-on a local network, the app still installs to the home screen and runs fullscreen,
-but offline caching is inactive until it's served over HTTPS.
+Browsers only expose the camera and service workers in a **secure context**.
+Over plain HTTP on a LAN address, `navigator.mediaDevices` is undefined entirely,
+so the scanner cannot start — the app falls back to manual bin-code entry.
+
+To enable scanning, serve the app over HTTPS with a local certificate authority.
+Nothing is exposed to the internet; the CA exists only on your machine.
+
+### 1. Generate the certificates
+
+```bash
+./scripts/make-certs.sh 192.168.4.25    # your computer's LAN IP
+```
+
+This creates `certs/`, containing a CA (valid 10 years) and a server certificate
+for that IP (820 days, within the 825-day limit iOS enforces). The whole folder
+is gitignored — the CA private key must never leave the machine.
+
+Reserve that IP for your computer in your router's DHCP settings. The server
+certificate is issued *for that address*, so a changed IP breaks it. If the IP
+does change, re-run the script: the CA is reused, so already-trusted devices keep
+working and only the server certificate is replaced.
+
+### 2. Trust the CA on your phone
+
+`app.py` now serves HTTPS, which your phone won't trust yet — so hand over the CA
+certificate using the setup-only helper (it serves that one file and nothing else;
+never point a directory server at `certs/`):
+
+```bash
+python scripts/serve-ca.py
+```
+
+On the phone, open the URL it prints, then:
+
+- **iOS**: Settings → Profile Downloaded → Install. Then
+  Settings → General → About → Certificate Trust Settings → enable full trust.
+  Both steps are required; installing alone is not enough.
+- **Android**: Settings → Security → Install from storage → CA certificate.
+
+Stop the helper with Ctrl+C once installed.
+
+### 3. Use HTTPS
+
+Visit `https://192.168.4.25:5000`. Scanning, offline caching, and Add to Home
+Screen all work from here.
 
 ## Workflow
 

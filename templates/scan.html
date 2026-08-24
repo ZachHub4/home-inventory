@@ -6,6 +6,28 @@
   <div id="scan-status" class="scan-status">Requesting camera access&hellip;</div>
   <video id="scan-video" class="scan-video" playsinline muted></video>
   <canvas id="scan-canvas" style="display:none"></canvas>
+
+  <div id="manual-entry" class="manual-entry">
+    <h2>Enter a bin code</h2>
+    <p class="scan-hint">The code is printed under the QR square on each label.</p>
+    <form class="form form-inline" method="get" action="{{ url_for('go_to_bin') }}">
+      <input type="text" name="code" placeholder="BIN-1A2B3C" required
+             autocapitalize="characters" autocomplete="off" spellcheck="false">
+      <button type="submit">Open Bin</button>
+    </form>
+    {% if recent %}
+      <p class="scan-hint">Recent bins:</p>
+      <div class="bin-grid">
+        {% for bin in recent %}
+          <a class="bin-card" href="{{ url_for('bin_detail', code=bin['code']) }}">
+            <div class="bin-card-name">{{ bin['name'] }}</div>
+            <div class="bin-card-code">{{ bin['code'] }}</div>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
   <script src="{{ url_for('static', filename='js/jsQR.js') }}"></script>
   <script src="{{ url_for('static', filename='js/scan.js') }}"></script>
 {% endblock %}

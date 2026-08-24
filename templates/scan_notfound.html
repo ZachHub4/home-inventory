@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Bin not found - Home Inventory{% endblock %}
+{% block content %}
+  <h1>No bin with that code</h1>
+  <p class="empty">Nothing matches <code>{{ code }}</code>. Check the code printed on the label and try again.</p>
+  <a class="btn" href="{{ url_for('scan') }}">Back to Scan</a>
+{% endblock %}

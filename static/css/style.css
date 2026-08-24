@@ -203,6 +203,28 @@ h2 { font-size: 1.15rem; margin-top: 2rem; }
 .scan-video { width: 100%; max-width: 480px; border-radius: 10px; border: 1px solid var(--border); margin-top: 1rem; background: #000; }
 .scan-status { color: var(--muted); margin-top: 0.5rem; }
 .scan-hint { color: var(--muted); }
+.scan-error {
+  background: #fdf1ef;
+  border: 1px solid #f0cdc7;
+  color: #8a2b21;
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  line-height: 1.45;
+}
+
+.manual-entry { margin-top: 1.5rem; }
+.manual-entry.prominent {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem 1.25rem;
+}
+.manual-entry h2 { margin-top: 0; }
+.manual-entry input[type="text"] {
+  font-family: monospace;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+}
 
 .label-body { display: flex; flex-direction: column; align-items: center; padding: 2rem; }
 .label-actions { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }

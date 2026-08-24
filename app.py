@@ -281,7 +281,26 @@ def bin_label(code):
 
 @app.route("/scan")
 def scan():
-    return render_template("scan.html")
+    conn = db.get_db()
+    recent = conn.execute(
+        "SELECT code, name FROM bins ORDER BY created_at DESC LIMIT 6"
+    ).fetchall()
+    return render_template("scan.html", recent=recent)
+
+
+@app.route("/go")
+def go_to_bin():
+    """Manual fallback for when the camera scanner isn't available."""
+    raw = request.args.get("code", "").strip().upper()
+    if not raw:
+        return redirect(url_for("scan"))
+    if not raw.startswith("BIN-"):
+        raw = "BIN-" + raw.lstrip("-")
+    conn = db.get_db()
+    row = conn.execute("SELECT code FROM bins WHERE code = ?", (raw,)).fetchone()
+    if row is None:
+        return render_template("scan_notfound.html", code=raw), 404
+    return redirect(url_for("bin_detail", code=row["code"]))
 
 
 @app.route("/manifest.webmanifest")

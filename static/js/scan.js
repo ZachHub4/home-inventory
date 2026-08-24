@@ -6,8 +6,15 @@
 
   let stopped = false;
 
-  function setStatus(text) {
+  function setStatus(text, isError) {
     status.textContent = text;
+    status.classList.toggle("scan-error", !!isError);
+  }
+
+  function disableCamera(message) {
+    setStatus(message, true);
+    video.style.display = "none";
+    document.getElementById("manual-entry").classList.add("prominent");
   }
 
   function handleCode(data) {
@@ -35,8 +42,19 @@
     requestAnimationFrame(tick);
   }
 
+  // Browsers only expose the camera API over HTTPS (or on localhost). Over plain
+  // HTTP on a LAN address, navigator.mediaDevices is undefined entirely - which
+  // looks like "no camera support" but is really a page-security restriction.
+  if (!window.isSecureContext) {
+    disableCamera(
+      "Scanning needs a secure (HTTPS) connection. This page is served over " +
+        "plain HTTP, so the browser blocks camera access. Enter the bin code below instead."
+    );
+    return;
+  }
+
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    setStatus("Camera access isn't supported in this browser.");
+    disableCamera("This browser doesn't support camera access. Enter the bin code below instead.");
     return;
   }
 
@@ -50,6 +68,12 @@
       requestAnimationFrame(tick);
     })
     .catch((err) => {
-      setStatus("Couldn't access the camera: " + err.message);
+      if (err && (err.name === "NotAllowedError" || err.name === "SecurityError")) {
+        disableCamera(
+          "Camera permission was denied. Allow it in your browser settings, or enter the bin code below."
+        );
+      } else {
+        disableCamera("Couldn't start the camera: " + (err && err.message) + ".");
+      }
     });
 })();

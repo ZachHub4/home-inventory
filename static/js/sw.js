@@ -1,5 +1,6 @@
 // Service worker: cache the static shell, always prefer fresh data for pages.
-const CACHE = "home-inventory-v1";
+// Bump this when static assets change so clients pick them up.
+const CACHE = "home-inventory-v2";
 const SHELL = [
   "/static/css/style.css",
   "/static/js/photo.js",
@@ -29,17 +30,21 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Static assets: serve from cache, refresh in background.
+  // Static assets: answer from cache immediately, but always re-fetch in the
+  // background so an edited stylesheet or script lands on the next load rather
+  // than being pinned until the cache version changes.
   if (url.pathname.startsWith("/static/")) {
     event.respondWith(
-      caches.match(request).then(
-        (hit) =>
-          hit ||
-          fetch(request).then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(request, copy));
-            return res;
-          })
+      caches.open(CACHE).then((cache) =>
+        cache.match(request).then((hit) => {
+          const fresh = fetch(request)
+            .then((res) => {
+              if (res && res.ok) cache.put(request, res.clone());
+              return res;
+            })
+            .catch(() => hit);
+          return hit || fresh;
+        })
       )
     );
     return;

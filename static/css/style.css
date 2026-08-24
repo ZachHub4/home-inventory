@@ -16,31 +16,63 @@ body {
   font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--ink);
+  /* Keep content clear of the home indicator when installed to the home screen. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* When installed as a home-screen app, the page renders edge to edge - including
+   under the status bar (clock, battery, camera notch). These insets are 0 in a
+   normal browser tab, so the desktop layout is unaffected. */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   padding: 1rem 1.25rem;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+  padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
   background: var(--card);
   border-bottom: 1px solid var(--border);
 }
 
-.brand { font-weight: 700; font-size: 1.1rem; color: var(--ink); text-decoration: none; }
+.brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
 
+.topbar nav {
+  display: flex;
+  gap: 1rem;
+}
 .topbar nav a {
-  margin-left: 1rem;
   color: var(--muted);
   text-decoration: none;
   font-size: 0.95rem;
+  white-space: nowrap;
 }
 .topbar nav a:hover { color: var(--accent); }
+
+/* Narrow phones: stack the bar so the brand and links stop competing. */
+@media (max-width: 460px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .topbar nav { gap: 1.25rem; }
+  .brand { font-size: 1.05rem; }
+}
 
 .search-bar {
   display: flex;
   gap: 0.5rem;
   padding: 1rem 1.25rem 0;
+  padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
   max-width: 700px;
   margin: 0 auto;
 }
@@ -64,6 +96,8 @@ main {
   max-width: 900px;
   margin: 0 auto;
   padding: 1.25rem;
+  padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
 }
 
 h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }

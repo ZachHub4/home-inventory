@@ -1,6 +1,8 @@
 import io
 import json
 import secrets
+import urllib.error
+import urllib.request
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -18,6 +20,7 @@ from flask import (
 )
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+import bulkparse
 import db
 
 UPLOAD_DIR = Path(__file__).parent / "static" / "uploads"
@@ -253,13 +256,113 @@ def add_item(code):
         quantity = 1
     description = request.form.get("description", "").strip()
     photo = save_photo(request.files.get("photo"))
+    barcode = request.form.get("barcode", "").strip() or None
     conn.execute(
-        """INSERT INTO items (bin_id, name, quantity, description, photo)
-           VALUES (?, ?, ?, ?, ?)""",
-        (bin_row["id"], name, quantity, description, photo),
+        """INSERT INTO items (bin_id, name, quantity, description, photo, barcode)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (bin_row["id"], name, quantity, description, photo, barcode),
     )
     conn.commit()
     return redirect(url_for("bin_detail", code=code))
+
+
+@app.route("/bin/<code>/bulk", methods=["GET", "POST"])
+def bulk_add(code):
+    """Type or dictate many items at once, then confirm what was understood."""
+    conn = db.get_db()
+    bin_row = get_bin_or_404(conn, code)
+
+    if request.method == "GET":
+        return render_template("bulk_add.html", bin=bin_row, text="")
+
+    text = request.form.get("text", "")
+    parsed = bulkparse.parse_text(text)
+    if not parsed:
+        return render_template(
+            "bulk_add.html",
+            bin=bin_row,
+            text=text,
+            error="Nothing recognisable in that. Put one item per line, like \"Ornaments 112\".",
+        )
+    return render_template("bulk_preview.html", bin=bin_row, items=parsed, text=text)
+
+
+@app.route("/bin/<code>/bulk/confirm", methods=["POST"])
+def bulk_confirm(code):
+    conn = db.get_db()
+    bin_row = get_bin_or_404(conn, code)
+
+    names = request.form.getlist("name")
+    quantities = request.form.getlist("quantity")
+    descriptions = request.form.getlist("description")
+    keep = set(request.form.getlist("keep"))
+
+    added = 0
+    for index, name in enumerate(names):
+        if str(index) not in keep:
+            continue
+        name = name.strip()
+        if not name:
+            continue
+        try:
+            quantity = max(1, int(quantities[index]))
+        except (ValueError, IndexError):
+            quantity = 1
+        description = descriptions[index].strip() if index < len(descriptions) else ""
+        conn.execute(
+            """INSERT INTO items (bin_id, name, quantity, description)
+               VALUES (?, ?, ?, ?)""",
+            (bin_row["id"], name, quantity, description),
+        )
+        added += 1
+    conn.commit()
+    return redirect(url_for("bin_detail", code=code))
+
+
+@app.route("/bin/<code>/scan-item")
+def scan_item(code):
+    conn = db.get_db()
+    bin_row = get_bin_or_404(conn, code)
+    return render_template("scan_item.html", bin=bin_row)
+
+
+@app.route("/barcode-lookup")
+def barcode_lookup():
+    """Look a barcode up with Open Food Facts.
+
+    This is the only outbound internet request the app makes, and it only runs
+    when the user ticks the lookup box on the scan page. Nothing but the digits
+    of the barcode is sent.
+    """
+    barcode = request.args.get("code", "").strip()
+    if not barcode.isdigit() or not (8 <= len(barcode) <= 14):
+        return {"found": False, "error": "Not a valid barcode."}, 400
+
+    url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "HomeInventory/1.0 (self-hosted)"}
+        )
+        with urllib.request.urlopen(req, timeout=6) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError):
+        return {"found": False, "error": "Lookup failed - no internet, or the service is down."}
+
+    if payload.get("status") != 1:
+        return {"found": False, "error": "That barcode isn't in the database."}
+
+    product = payload.get("product", {})
+    name = (
+        product.get("product_name")
+        or product.get("generic_name")
+        or ""
+    ).strip()
+    brand = (product.get("brands") or "").split(",")[0].strip()
+    if brand and name and not name.lower().startswith(brand.lower()):
+        name = f"{brand} {name}"
+    if not name:
+        return {"found": False, "error": "No product name available for that barcode."}
+    return {"found": True, "name": name[:120], "quantity_hint": product.get("quantity", "")}
 
 
 @app.route("/items/<int:item_id>/edit", methods=["GET", "POST"])

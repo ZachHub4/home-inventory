@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Scan Barcode - {{ bin['name'] }}{% endblock %}
+{% block content %}
+  <h1>Scan a Barcode</h1>
+  <p class="bin-sub">Adding to <strong>{{ bin['name'] }}</strong> &middot; <code>{{ bin['code'] }}</code></p>
+
+  <div id="scan-status" class="scan-status">Loading&hellip;</div>
+  <p><button type="button" id="scan-start" class="btn scan-start">Start Camera</button></p>
+  <video id="scan-video" class="scan-video" playsinline muted></video>
+
+  <label class="checkbox-row lookup-toggle">
+    <input type="checkbox" id="lookup-online">
+    Look up the product name online
+  </label>
+  <p class="scan-hint lookup-note">
+    Off by default. When on, the barcode digits alone are sent to Open Food Facts
+    to fetch a name &mdash; the only outbound request this app makes. It mostly
+    knows groceries; other products often aren't listed.
+  </p>
+
+  <form class="form" method="post" action="{{ url_for('add_item', code=bin['code']) }}"
+        enctype="multipart/form-data" id="scanned-form">
+    <input type="hidden" name="barcode" id="field-barcode">
+    <p id="barcode-found" class="barcode-found" hidden></p>
+    <label>Item name
+      <input type="text" name="name" id="field-name" required>
+    </label>
+    <label>Quantity
+      <input type="number" name="quantity" value="1" min="1">
+    </label>
+    <label>Description
+      <input type="text" name="description" placeholder="Optional">
+    </label>
+    <label class="photo-picker">
+      📷 Photo
+      <input type="file" name="photo" accept="image/*">
+    </label>
+    <button type="submit">Add Item</button>
+  </form>
+
+  <script src="{{ url_for('static', filename='js/zxing.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/barcode.js') }}"></script>
+{% endblock %}

@@ -339,6 +339,64 @@ h2 { font-size: 1.15rem; margin-top: 2rem; }
   gap: 0.4rem !important;
 }
 
+/* --- bulk add & barcode scanning --- */
+.add-modes { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0 1rem; }
+
+.hint-box {
+  margin-top: 1.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+}
+.hint-box summary { cursor: pointer; color: var(--accent); font-size: 0.92rem; }
+.hint-list { margin: 0.6rem 0 0.2rem; padding-left: 1.1rem; color: var(--muted); font-size: 0.9rem; }
+.hint-list li { margin-bottom: 0.3rem; }
+.hint-list code { color: var(--ink); }
+
+.preview-list { list-style: none; margin: 1rem 0; padding: 0; display: grid; gap: 0.5rem; }
+.preview-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+}
+.preview-keep { padding-top: 0.55rem; }
+.preview-fields { display: flex; flex-wrap: wrap; gap: 0.4rem; flex: 1; min-width: 0; }
+.preview-fields input {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  min-width: 0;
+}
+.preview-fields input[name="name"] { flex: 2 1 9rem; font-weight: 600; }
+.preview-fields input[name="description"] { flex: 3 1 11rem; }
+.preview-qty { flex: 0 0 4.5rem; text-align: center; }
+
+.lookup-toggle { margin-top: 1rem; font-size: 0.95rem; }
+.lookup-note { font-size: 0.83rem; margin-top: 0.3rem; max-width: 34rem; }
+.barcode-found {
+  background: #eef4f9;
+  border: 1px solid #cddced;
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-family: monospace;
+  font-size: 0.88rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
 /* --- photo lightbox --- */
 .photo-btn {
   background: none;

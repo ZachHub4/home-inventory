@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Check items - {{ bin['name'] }}{% endblock %}
+{% block content %}
+  <h1>Check before saving</h1>
+  <p class="bin-sub">
+    {{ items|length }} item{{ '' if items|length == 1 else 's' }} understood for
+    <strong>{{ bin['name'] }}</strong>. Fix anything that came out wrong, untick
+    anything you don't want.
+  </p>
+
+  <form method="post" action="{{ url_for('bulk_confirm', code=bin['code']) }}">
+    <ul class="preview-list">
+      {% for name, quantity, description in items %}
+        <li class="preview-row">
+          <label class="preview-keep">
+            <input type="checkbox" name="keep" value="{{ loop.index0 }}" checked>
+            <span class="visually-hidden">Include this item</span>
+          </label>
+          <div class="preview-fields">
+            <input type="text" name="name" value="{{ name }}" aria-label="Item name" required>
+            <input type="number" name="quantity" value="{{ quantity }}" min="1"
+                   aria-label="Quantity" class="preview-qty">
+            <input type="text" name="description" value="{{ description }}"
+                   aria-label="Description" placeholder="Description (optional)">
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <div class="bin-actions">
+      <button type="submit">Add These Items</button>
+      <a class="btn btn-quiet" href="{{ url_for('bulk_add', code=bin['code']) }}">Start over</a>
+    </div>
+  </form>
+{% endblock %}

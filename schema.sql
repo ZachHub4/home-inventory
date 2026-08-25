@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS items (
     quantity INTEGER NOT NULL DEFAULT 1,
     description TEXT,
     photo TEXT,
+    -- UPC/EAN captured by the barcode scanner, when there was one to scan.
+    barcode TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

@@ -33,6 +33,8 @@ def migrate_db(db):
     item_columns = {row["name"] for row in db.execute("PRAGMA table_info(items)")}
     if "photo" not in item_columns:
         db.execute("ALTER TABLE items ADD COLUMN photo TEXT")
+    if "barcode" not in item_columns:
+        db.execute("ALTER TABLE items ADD COLUMN barcode TEXT")
 
     bin_columns = {row["name"] for row in db.execute("PRAGMA table_info(bins)")}
     if "printed_at" not in bin_columns:

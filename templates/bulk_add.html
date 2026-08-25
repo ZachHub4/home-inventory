@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Quick Add - {{ bin['name'] }}{% endblock %}
+{% block content %}
+  <h1>Quick Add</h1>
+  <p class="bin-sub">Into <strong>{{ bin['name'] }}</strong> &middot; <code>{{ bin['code'] }}</code></p>
+
+  {% if error %}<p class="scan-error">{{ error }}</p>{% endif %}
+
+  <p class="scan-hint">
+    One item per line. Tap the microphone on your keyboard to dictate instead of typing &mdash;
+    you'll get a chance to check everything before it's saved.
+  </p>
+
+  <form class="form" method="post">
+    <label>Items
+      <textarea name="text" rows="9" autofocus
+                placeholder="Ornaments 112&#10;Tree lights 4&#10;Garland&#10;Extension cord | 25 foot orange">{{ text }}</textarea>
+    </label>
+    <button type="submit">Preview</button>
+  </form>
+
+  <details class="hint-box">
+    <summary>What it understands</summary>
+    <ul class="hint-list">
+      <li><code>Ornaments 112</code> &mdash; name then quantity</li>
+      <li><code>112 ornaments</code> &mdash; quantity first works too</li>
+      <li><code>Ornaments x112</code> or <code>Ornaments qty 112</code></li>
+      <li><code>ornaments one hundred twelve</code> &mdash; spoken numbers</li>
+      <li><code>Garland</code> &mdash; no number means one</li>
+      <li><code>Extension cord | 25 foot orange</code> &mdash; text after <code>|</code> becomes the description</li>
+      <li>Dictating one long sentence works &mdash; commas separate the items</li>
+    </ul>
+  </details>
+{% endblock %}

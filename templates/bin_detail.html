@@ -60,7 +60,12 @@
     </div>
   {% endif %}
 
-  <h2>Add Item</h2>
+  <h2>Add Items</h2>
+  <div class="add-modes">
+    <a class="btn" href="{{ url_for('bulk_add', code=bin['code']) }}">⚡ Quick Add / Dictate</a>
+    <a class="btn btn-quiet" href="{{ url_for('scan_item', code=bin['code']) }}">🏷️ Scan Barcode</a>
+  </div>
+
   <form class="form form-inline" method="post" action="{{ url_for('add_item', code=bin['code']) }}" enctype="multipart/form-data">
     <input type="text" name="name" placeholder="Item name" required>
     <input type="number" name="quantity" placeholder="Qty" value="1" min="1" style="width:5em">

@@ -15,6 +15,9 @@
   <a class="btn" href="{{ url_for('export_backup') }}">Download Backup</a>
 
   <h2>Restore</h2>
+  {% if demo %}
+  <p class="bin-sub">Restoring a backup is turned off in the demo.</p>
+  {% else %}
   <div class="danger-box">
     <p><strong>Restoring replaces everything.</strong> Every bin, item, and photo
        currently in the app is deleted and replaced with the backup's contents.
@@ -33,4 +36,5 @@
     </label>
     <button class="btn-danger" type="submit">Replace All Data</button>
   </form>
+  {% endif %}
 {% endblock %}

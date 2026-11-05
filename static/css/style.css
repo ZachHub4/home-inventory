@@ -636,3 +636,16 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   .no-print { display: none; }
   .label { border: none; }
 }
+
+/* Public demo banner (only shown when HOME_INVENTORY_DEMO=1) */
+.demo-banner {
+  padding: 0.6rem 1.25rem;
+  padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
+  background: #fdf1e4;
+  color: #6b3a10;
+  border-bottom: 1px solid #f0d6b8;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.demo-banner a { color: var(--accent); font-weight: 600; white-space: nowrap; }

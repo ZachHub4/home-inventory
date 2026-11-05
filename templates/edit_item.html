@@ -34,11 +34,13 @@
           <input type="checkbox" name="remove_photo" value="1"> Remove this photo
         </label>
       </div>
+      {% if not demo %}
       <label>Replace photo
         <span class="field-hint">Camera or photo library</span>
         <input type="file" name="photo" accept="image/*">
       </label>
-    {% else %}
+      {% endif %}
+    {% elif not demo %}
       <label>Add photo
         <span class="field-hint">Camera or photo library</span>
         <input type="file" name="photo" accept="image/*">

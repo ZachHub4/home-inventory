@@ -22,6 +22,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 import bulkparse
 import db
+import demo
 
 UPLOAD_DIR = Path(__file__).parent / "static" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -33,6 +34,7 @@ app = Flask(__name__)
 app.config["DATABASE"] = str(Path(__file__).parent / "inventory.db")
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 db.init_app(app)
+demo.init_app(app, db)
 
 with app.app_context():
     db.init_db()

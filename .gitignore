@@ -19,3 +19,6 @@ certs/
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Demo mode reset timestamp
+.demo_reset_at

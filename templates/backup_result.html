@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Restored' if ok else 'Restore failed' }} - Home Inventory{% endblock %}
+{% block title %}{{ heading or ('Restored' if ok else 'Restore failed') }} - Home Inventory{% endblock %}
 {% block content %}
-  <h1>{{ 'Backup restored' if ok else 'Restore failed' }}</h1>
+  <h1>{{ heading or ('Backup restored' if ok else 'Restore failed') }}</h1>
   <p class="{{ 'restore-ok' if ok else 'scan-error' }}">{{ message }}</p>
   <div class="bin-actions">
     <a class="btn" href="{{ url_for('index') }}">Go to Bins</a>

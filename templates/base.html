@@ -26,6 +26,13 @@
       <a href="{{ url_for('labels') }}">Labels</a>
     </nav>
   </header>
+  {% if demo %}
+  <div class="demo-banner">
+    <strong>Live demo</strong> with sample data. Add, edit and delete freely; it all
+    resets every 24 hours. Photo uploads are off.
+    <a href="https://github.com/ZachHub4/home-inventory">View the code</a>
+  </div>
+  {% endif %}
   <form class="search-bar" action="{{ url_for('search') }}" method="get">
     <input type="text" name="q" placeholder="Search items or bins..." value="{{ request.args.get('q', '') }}">
     <button type="submit">Search</button>
